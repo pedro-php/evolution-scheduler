@@ -1,0 +1,56 @@
+# Node
+node_modules/
+volumes/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build / output
+dist/
+build/
+out/
+lib/
+*.tsbuildinfo
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.evolution
+.env.local
+.env.test
+.env.production
+prisma/.env
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+coverage/lcov-report/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+.cache/
+.serverless/

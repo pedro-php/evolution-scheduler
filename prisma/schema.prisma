@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scheduledMessages ScheduledMessage[]
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  // Business context
+  instance String
+  to       String
+  text     String
+
+  // Evolution / WhatsApp identifiers
+  externalId String? @unique
+  remoteJid  String?
+
+  // Message lifecycle
+  status MessageStatus @default(PENDING)
+
+  // Error handling
+  errorCode   String?
+  errorReason String?
+
+  // Timestamps
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([instance])
+  @@index([to])
+  @@index([status])
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model ScheduledMessage {
+  id String @id @default(uuid())
+
+  userId   String?
+  instance String
+  to       String
+  text     String
+
+  scheduledFor DateTime
+  sentAt       DateTime?
+
+  status ScheduledMessageStatus @default(PENDING)
+
+  externalId String? // evolution message id
+  error      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+enum ScheduledMessageStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+}

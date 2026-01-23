@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./volumes/pg:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:8.4.0-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  evolution-api:
+    image: adaptweb/evolution-api:2.9.6
+    container_name: evolution-api
+    restart: unless-stopped
+    env_file:
+      - .env.evolution
+    depends_on:
+      - redis
+    ports:
+      - "8080:8080"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - evolution-api
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
