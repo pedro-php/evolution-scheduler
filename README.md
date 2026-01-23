@@ -139,9 +139,3 @@ EVOLUTION_WEBHOOK_URL=http://api:3000/webhooks/evolution
 ```bash
 docker compose up --build
 ```
-
----
-
-## Notes
-
-This project is webhook-driven and production-oriented.
