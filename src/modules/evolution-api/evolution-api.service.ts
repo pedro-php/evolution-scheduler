@@ -51,6 +51,11 @@ export class EvolutionApiService {
     return data;
   }
 
+  async delete(instanceName: string) {  
+    const { data } = await this.evolution.delete(instanceName);
+    return data;
+  }
+
   async sendMessage(sendTextDto: SendTextDto) {
     const message = await this.prisma.message.create({
       data: {

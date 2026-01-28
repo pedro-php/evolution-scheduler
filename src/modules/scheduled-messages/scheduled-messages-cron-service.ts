@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "src/core/prisma/prisma.service";
 import { EvolutionApiService } from "../evolution-api/evolution-api.service";
+import { InstancesService } from "../instances/instances.service";
 
 @Injectable()
 export class ScheduledMessagesCronService {
@@ -10,6 +11,7 @@ export class ScheduledMessagesCronService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly evolution: EvolutionApiService,
+    private readonly instancesService: InstancesService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -43,10 +45,13 @@ export class ScheduledMessagesCronService {
 
     this.logger.log(`Dispatching ${messages.length} scheduled messages`);
 
+   
+
     for (const msg of messages) {
+       const instance = await this.instancesService.findById(msg.instanceId!);
       try {
         const result = await this.evolution.sendMessage({
-          instance: msg.instance,
+          instance: instance!.name,
           number: msg.to,
           text: msg.text,
         });

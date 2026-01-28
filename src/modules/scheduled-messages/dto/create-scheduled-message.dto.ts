@@ -5,7 +5,7 @@ export class CreateScheduledMessageDto {
   @ApiProperty({ example: "my-instance" })
   @IsString()
   @IsNotEmpty()
-  instance: string;
+  instanceId: string;
 
   @ApiProperty({ example: "5511999999999" })
   @IsString()

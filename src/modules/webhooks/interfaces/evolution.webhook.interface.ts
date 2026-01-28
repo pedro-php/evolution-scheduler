@@ -5,6 +5,7 @@ export interface EvolutionMessageUpsertPayload {
   data: {
     key: {
       remoteJid: string;
+       remoteJidAlt: string;
       fromMe: boolean;
       id: string;
     };

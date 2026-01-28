@@ -39,6 +39,10 @@ export class EvolutionHttpAdapter {
     return this.client.delete(`/instance/logout/${instance}`);
   }
 
+  delete(instance: string) {
+    return this.client.delete(`/instance/delete/${instance}`);
+  }
+
   sendTextMessage(sendTextDto: SendTextDto) {
     return this.client.post(`/message/sendText/${sendTextDto.instance}`, sendTextDto);
   }
