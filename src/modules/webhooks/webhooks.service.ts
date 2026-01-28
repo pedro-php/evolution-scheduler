@@ -1,91 +1,56 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { MessageStatus } from "@prisma/client";
 import { PrismaService } from "src/core/prisma/prisma.service";
+import { ScheduleParserService } from "../openai/schedule-parser.service";
 import { EvolutionMessageUpsertPayload } from "./interfaces/evolution.webhook.interface";
+import { MessageStatus } from "@prisma/client";
 
 @Injectable()
 export class WebhooksService {
-    private readonly logger = new Logger(WebhooksService.name);
+  private readonly logger = new Logger(WebhooksService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly aiParser: ScheduleParserService,
+  ) {}
 
-    async handleMessageUpsert(payload: EvolutionMessageUpsertPayload) {
-        const text = payload?.data?.message?.conversation;
-        const fromJid = payload?.data?.key?.remoteJid;
-        const instance = payload?.instance;
+  async handleMessageUpsert(payload: EvolutionMessageUpsertPayload) {
+    if (!payload?.data?.key?.fromMe) return;
+    await this.trySchedule(payload);
+  }
 
-        if (!text || !text.startsWith("!schedule") || !payload.data.key.fromMe) return;
+  async handleSendMessage(payload: EvolutionMessageUpsertPayload) {
+    await this.trySchedule(payload);
+  }
 
-        const parsed = this.parseScheduleCommand(text);
-        if (!parsed) return;
+  private async trySchedule(payload: EvolutionMessageUpsertPayload) {
+    const text = payload?.data?.message?.conversation;
+    const fromJid = payload?.data?.key?.remoteJid;
+    const instance = payload?.instance;
 
-        const { message, scheduledFor } = parsed;
+    if (!text || !fromJid) return;
 
-        const phone = fromJid.replace("@s.whatsapp.net", "");
+    if(!text.toLocaleUpperCase().startsWith("!schedule")) return;
 
+    const intent = await this.aiParser.parseSchedule(text);
+    if (!intent) return;
 
-        await this.prisma.scheduledMessage.create({
-            data: {
-                instance,
-                to: phone,
-                text: message,
-                scheduledFor,
-                status: MessageStatus.PENDING,
-            },
-        });
+    const scheduledFor = new Date(intent.scheduledFor);
+    if (isNaN(scheduledFor.getTime())) return;
 
-        this.logger.log(
-            `Scheduled message for ${phone} at ${scheduledFor.toISOString()}`,
-        );
-    }
+    const phone = fromJid.replace("@s.whatsapp.net", "");
 
-    async handleSendMessage(payload: EvolutionMessageUpsertPayload) {
-        const text = payload?.data?.message?.conversation;
-        const fromJid = payload?.data?.key?.remoteJid;
-        const instance = payload?.instance;
+    await this.prisma.scheduledMessage.create({
+      data: {
+        instance,
+        to: phone,
+        text: intent.message,
+        scheduledFor,
+        status: MessageStatus.PENDING,
+      },
+    });
 
-        if (!text || !text.startsWith("!schedule")) return;
-
-        const parsed = this.parseScheduleCommand(text);
-        if (!parsed) return;
-
-        const { message, scheduledFor } = parsed;
-
-        const phone = fromJid.replace("@s.whatsapp.net", "");
-
-
-        await this.prisma.scheduledMessage.create({
-            data: {
-                instance,
-                to: phone,
-                text: message,
-                scheduledFor,
-                status: MessageStatus.PENDING,
-            },
-        });
-
-        this.logger.log(
-            `Scheduled message for ${phone} at ${scheduledFor.toISOString()}`,
-        );
-    }
-
-    /**
-     * Parses: !schedule "Hello" "2026-01-25 14:30"
-     */
-    private parseScheduleCommand(
-        text: string,
-    ): { message: string; scheduledFor: Date } | null {
-        const regex =
-            /^!schedule\s+"(.+?)"\s+"(.+?)"\s*$/i;
-
-        const match = text.match(regex);
-        if (!match) return null;
-
-        const [, message, dateRaw] = match;
-
-        const date = new Date(dateRaw);
-        if (isNaN(date.getTime())) return null;
-
-        return { message, scheduledFor: date };
-    }
+    this.logger.log(
+      `AI scheduled message for ${phone} at ${scheduledFor.toISOString()}`,
+    );
+  }
 }
