@@ -7,11 +7,10 @@ import { UpdateScheduledMessageDto } from "./dto/update-scheduled-message.dto";
 export class ScheduledMessagesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, dto: CreateScheduledMessageDto) {
+  async create(dto: CreateScheduledMessageDto) {
     return this.prisma.scheduledMessage.create({
       data: {
-        userId,
-        instance: dto.instance,
+        instanceId: dto.instanceId,
         to: dto.to,
         text: dto.text,
         scheduledFor: new Date(dto.scheduledFor),
@@ -19,16 +18,16 @@ export class ScheduledMessagesService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(instanceId: string) {
     return this.prisma.scheduledMessage.findMany({
-      where: { userId },
+      where: { instanceId },
       orderBy: { scheduledFor: "asc" },
     });
   }
 
-  async findOne(userId: string, id: string) {
+  async findOne(instanceId: string, id: string) {
     return this.prisma.scheduledMessage.findFirst({
-      where: { id, userId },
+      where: { id, instanceId },
     });
   }
 

@@ -12,7 +12,7 @@ import {
 } from "@nestjs/swagger";
 import { AdminsService } from "./admins.service";
 import { JwtAuthGuard } from "../jwt/jwt-auth.guard";
-import { CurrentUser } from "../jwt/decorators/current-user.decorator";
+import { CurrentAdmin } from "../jwt/decorators/current-user.decorator";
 import { AdminResponseDto } from "./dto/admin-response.dto";
 import { PatchAdminDto } from "./dto/patch-admin.dto";
 import type { JwtPayload } from "../jwt/jwt.payload";
@@ -26,16 +26,16 @@ export class AdminsController {
 
   @Get("me")
   @ApiOkResponse({ type: AdminResponseDto })
-  async me(@CurrentUser() user: JwtPayload) {
-    return this.adminsService.findById(user.sub);
+  async me(@CurrentAdmin() admin: JwtPayload) {
+    return this.adminsService.findById(admin.sub);
   }
 
   @Patch("me")
   @ApiOkResponse({ type: AdminResponseDto })
   async updateMe(
-    @CurrentUser() user: JwtPayload,
+    @CurrentAdmin() admin: JwtPayload,
     @Body() dto: PatchAdminDto,
   ) {
-    return this.adminsService.update(user.sub, dto);
+    return this.adminsService.update(admin.sub, dto);
   }
 }

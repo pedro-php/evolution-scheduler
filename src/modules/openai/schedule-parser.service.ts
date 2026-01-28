@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import OpenAI from "openai";
-import { ScheduleIntent } from "./interfaces/schedule-intent";
+import { ScheduleIntent } from "./interfaces/schedule-intent.interface";
 
 @Injectable()
 export class ScheduleParserService {
@@ -16,19 +16,19 @@ export class ScheduleParserService {
         {
           role: "system",
           content: `
-                You extract scheduling intents from messages.
+You extract scheduling intents from messages.
 
-                Return ONLY valid JSON.
-                If the user wants to schedule a message, return:
-                {
-                "intent": "schedule_message",
-                "message": string,
-                "scheduledFor": ISO_8601_datetime
-                }
+Return ONLY valid JSON.
+If the user wants to schedule a message, return:
+{
+  "intent": "schedule_message",
+  "message": string,
+  "scheduledFor": ISO_8601_datetime
+}
 
-                If not schedulable, return null.
-                Never explain anything.
-                Never type !schedule in your response.
+If not schedulable, return null.
+Never explain anything.
+Never type !schedule on the message.
           `.trim(),
         },
         { role: "user", content: text },

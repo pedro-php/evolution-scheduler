@@ -19,7 +19,7 @@ import { InstancesService } from "./instances.service";
 import { CreateInstanceDto } from "../evolution-api/dto/create-instance.dto";
 import type { JwtPayload } from "../jwt/jwt.payload";
 import { JwtAuthGuard } from "../jwt/jwt-auth.guard";
-import { CurrentUser } from "../jwt/decorators/current-user.decorator";
+import { CurrentAdmin } from "../jwt/decorators/current-user.decorator";
 @ApiTags("Instances")
 @ApiBearerAuth("jwt")
 @UseGuards(JwtAuthGuard)
@@ -41,7 +41,7 @@ export class InstancesController {
     description: "Unauthorized",
   })
   create(
-    @CurrentUser() user: JwtPayload,
+    @CurrentAdmin() user: JwtPayload,
     @Body() dto: CreateInstanceDto,
   ) {
     return this.instancesService.create(user, dto);
@@ -75,7 +75,7 @@ export class InstancesController {
     status: 200,
     description: "Instances retrieved successfully",
   })
-  findMyInstances(@CurrentUser() user: JwtPayload) {
+  findMyInstances(@CurrentAdmin() user: JwtPayload) {
     return this.instancesService.findByAdmin(user.sub);
   }
 

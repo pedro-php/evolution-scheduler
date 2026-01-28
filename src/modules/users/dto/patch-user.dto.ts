@@ -1,20 +1,14 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEmail, IsOptional, IsStrongPassword } from "class-validator";
+import { IsEmail, IsOptional, IsString, IsStrongPassword } from "class-validator";
 
 export class PatchUserDto {
     @ApiPropertyOptional()
     @IsOptional()
-    @IsEmail()
-    email?: string;
+    @IsString()
+    name?: string;
 
     @ApiPropertyOptional()
+    @IsString()
     @IsOptional()
-    @IsStrongPassword({
-        minLength: 8,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-    })
-    password?: string;
+    phone?: string;
 }

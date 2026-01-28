@@ -2,19 +2,26 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Body,
+  Query,
   UseGuards,
+  NotFoundException,
+  Delete,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiTags,
   ApiOkResponse,
+  ApiCreatedResponse,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "../jwt/jwt-auth.guard";
-import { CurrentUser } from "../jwt/decorators/current-user.decorator";
+import { CurrentAdmin } from "../jwt/decorators/current-user.decorator";
 import { UserResponseDto } from "./dto/user-response.dto";
 import { PatchUserDto } from "./dto/patch-user.dto";
+import { UserDto } from "./dto/user.dto";
 import type { JwtPayload } from "../jwt/jwt.payload";
 
 @ApiTags("Users")
@@ -22,20 +29,36 @@ import type { JwtPayload } from "../jwt/jwt.payload";
 @UseGuards(JwtAuthGuard)
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Get("me")
-  @ApiOkResponse({ type: UserResponseDto })
-  async me(@CurrentUser() user: JwtPayload) {
-    return this.usersService.findById(user.sub);
+  constructor(private readonly usersService: UsersService) { }
+  @Post()
+  @ApiCreatedResponse({ type: UserResponseDto })
+  async create(@CurrentAdmin() admin: JwtPayload, @Body() dto: UserDto): Promise<UserResponseDto> {
+    return this.usersService.create(admin.sub, dto);
   }
 
-  @Patch("me")
+  @Get()
+  @ApiQuery({ name: "phone", required: true })
   @ApiOkResponse({ type: UserResponseDto })
-  async updateMe(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: PatchUserDto,
-  ) {
-    return this.usersService.update(user.sub, dto);
+  async findByPhone(
+    @Query("phone") phone: string,
+  ): Promise<UserResponseDto> {
+    const result = await this.usersService.findByPhone(phone);
+
+    if (!result) {
+      throw new NotFoundException("User not found");
+    }
+
+    return result;
+  }
+
+  @Patch(":id")
+  @ApiOkResponse({ type: UserResponseDto })
+  async update(@Query("id") id: string,@Body() dto: PatchUserDto): Promise<UserResponseDto | null> {
+    return this.usersService.update(id, dto);
+  }
+
+  @Delete(":id")
+  async delete(@Query("id") id: string): Promise<void> {
+    return this.usersService.delete(id);
   }
 }

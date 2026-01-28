@@ -5,22 +5,11 @@ export class UserResponseDto {
   id: string;
 
   @ApiProperty()
-  email: string;
+  phone: string;
 
   @ApiProperty()
-  createdAt: Date;
-}
-
-export class UserPasswordResponseDto {
-  @ApiProperty()
-  id: string;
+  name:string | null;
 
   @ApiProperty()
-  password: string;
-
-  @ApiProperty()
-  email: string;
-
-  @ApiProperty()
-  createdAt: Date;
+  createdAt?: Date;
 }

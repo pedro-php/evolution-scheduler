@@ -1,35 +1,32 @@
 import { Injectable, ConflictException } from "@nestjs/common";
 import { UserDto } from "./dto/user.dto";
-import * as bcrypt from "bcrypt";
 import { PrismaService } from "src/core/prisma/prisma.service";
 import { PatchUserDto } from "./dto/patch-user.dto";
 import { UserResponseDto } from "./dto/user-response.dto";
-import { User } from "@prisma/client";
-import { PasswordMatchResponseDto } from "./dto/password-match-response.dto";
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: UserDto) : Promise<UserResponseDto> {
+  async create(adminId: string, dto: UserDto) : Promise<UserResponseDto> {
     const exists = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { phone: dto.phone },
     });
 
     if (exists) {
-      throw new ConflictException("Email already in use");
+      throw new ConflictException("Phone already in use");
     }
-
-    const passwordHash = await bcrypt.hash(dto.password, 10);
 
     return this.prisma.user.create({
       data: {
-        email: dto.email,
-        password: passwordHash,
+        phone: dto.phone,
+        name: dto.name,
+        adminId: adminId
       },
       select: {
         id: true,
-        email: true,
+        phone: true,
+        name: true,
         createdAt: true,
       },
     });
@@ -37,52 +34,50 @@ export class UsersService {
 
   async findById(id: string) : Promise<UserResponseDto | null>{
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { id , del: false },
       select: {
         id: true,
-        email: true,
+        phone: true,
+        name: true,
         createdAt: true,
       },
     });
   }
 
-  async findByEmail(email: string) : Promise<UserResponseDto | null>{
+  async findByPhone(phone: string) : Promise<UserResponseDto | null>{
     return this.prisma.user.findUnique({
-      where: { email },
+      where: { phone, del: false },
        select: {
         id: true,
-        email: true,
+        phone: true,
+        name: true,
         createdAt: true,
       },
     });
-  }
-
-  async doesUserPasswordMatch(dto: UserDto) : Promise<PasswordMatchResponseDto> {
-    const user =  await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (!user) return {match: false};
-
-    const match = await bcrypt.compare(dto.password, user.password);
-
-    return {user: user, match: match};
   }
 
   async update(id: string, dto: PatchUserDto) : Promise<UserResponseDto | null> {
     const data: PatchUserDto = {};
 
-    if (dto.email) data.email = dto.email;
-    if (dto.password) data.password = await bcrypt.hash(dto.password, 10);
+    if (dto.phone) data.phone = dto.phone;
+    if (dto.name) data.name = dto.name;
     
-
     return this.prisma.user.update({
       where: { id },
       data,
       select: {
         id: true,
-        email: true,
+        phone: true,
+        name: true,
         createdAt: true,
       },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data: { del: true },
     });
   }
 }
