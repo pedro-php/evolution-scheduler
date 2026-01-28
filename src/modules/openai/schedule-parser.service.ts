@@ -39,7 +39,7 @@ Never type !schedule on the message.
     if (!raw) return null;
 
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw) as ScheduleIntent;
       if (parsed?.intent !== "schedule_message") return null;
       return parsed;
     } catch {
