@@ -18,6 +18,7 @@ lib/
 
 # Environment
 .env
+.env.e2e
 .env.evolution
 .env.local
 .env.test
@@ -53,4 +54,3 @@ docker-compose.override.yml
 
 # Misc
 .cache/
-.serverless/

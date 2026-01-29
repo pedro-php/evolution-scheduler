@@ -1,66 +1,111 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { UnauthorizedException, ConflictException } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { UsersService } from "../users/users.service";
+import { AdminsService } from "../admins/admins.service";
 import { JwtService } from "../jwt/jwt.service";
-import { ConflictException, UnauthorizedException } from "@nestjs/common";
 
 describe("AuthService", () => {
   let service: AuthService;
-
-  const usersServiceMock = {
-    findByEmail: jest.fn(),
-    create: jest.fn(),
-    doesUserPasswordMatch: jest.fn(),
-  };
-
-  const jwtServiceMock = {
-    sign: jest.fn().mockReturnValue("signed-jwt-token"),
-  };
+  let admins: jest.Mocked<AdminsService>;
+  let jwt: jest.Mocked<JwtService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: UsersService, useValue: usersServiceMock },
-        { provide: JwtService, useValue: jwtServiceMock },
+        {
+          provide: AdminsService,
+          useValue: {
+            findByEmail: jest.fn(),
+            create: jest.fn(),
+            doesUserPasswordMatch: jest.fn(),
+          },
+        },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get(AuthService);
+    admins = module.get(AdminsService);
+    jwt = module.get(JwtService);
   });
 
-  it("registers a new user and returns a token", async () => {
-    usersServiceMock.findByEmail.mockResolvedValue(null);
-    usersServiceMock.create.mockResolvedValue({
-      id: 1,
-      email: "test@test.com",
+  describe("register", () => {
+    it("should throw if email already exists", async () => {
+      admins.findByEmail.mockResolvedValue({
+        id: "id",
+        email: "admin@test.com",
+        createdAt: new Date(),
+      });
+
+      await expect(
+        service.register({ email: "admin@test.com", password: "123" }),
+      ).rejects.toThrow(ConflictException);
     });
 
-    const result = await service.register({
-      email: "test@test.com",
-      password: "123456",
-    });
+    it("should create admin and return jwt", async () => {
+      admins.findByEmail.mockResolvedValue(null);
 
-    expect(result.access_token).toBe("signed-jwt-token");
-    expect(jwtServiceMock.sign).toHaveBeenCalled();
+      admins.create.mockResolvedValue({
+        id: "id",
+        email: "admin@test.com",
+        createdAt: new Date(),
+      });
+
+      jwt.sign.mockReturnValue("jwt-token");
+
+      const result = await service.register({
+        email: "admin@test.com",
+        password: "123",
+      });
+
+      expect(admins.create).toHaveBeenCalled();
+      expect(jwt.sign).toHaveBeenCalledWith({
+        sub: "id",
+        email: "admin@test.com",
+      });
+      expect(result.access_token).toBe("jwt-token");
+    });
   });
 
-  it("throws ConflictException if user already exists", async () => {
-    usersServiceMock.findByEmail.mockResolvedValue({ id: 1 });
+  describe("login", () => {
+    it("should throw if credentials are invalid", async () => {
+      admins.doesUserPasswordMatch.mockResolvedValue({
+        match: false,
+      });
 
-    await expect(
-      service.register({ email: "test@test.com", password: "123" })
-    ).rejects.toBeInstanceOf(ConflictException);
-  });
-
-  it("throws UnauthorizedException on invalid login", async () => {
-    usersServiceMock.doesUserPasswordMatch.mockResolvedValue({
-      user: null,
-      match: false,
+      await expect(
+        service.login({ email: "x@test.com", password: "123" }),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
-    await expect(
-      service.login({ email: "test@test.com", password: "wrong" })
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    it("should return jwt if credentials are valid", async () => {
+      admins.doesUserPasswordMatch.mockResolvedValue({
+        match: true,
+        user: {
+          id: "id",
+          email: "admin@test.com",
+          createdAt: new Date(),
+        },
+      });
+
+      jwt.sign.mockReturnValue("jwt-token");
+
+      const result = await service.login({
+        email: "admin@test.com",
+        password: "123",
+      });
+
+      expect(jwt.sign).toHaveBeenCalledWith({
+        sub: "id",
+        email: "admin@test.com",
+      });
+      expect(result.access_token).toBe("jwt-token");
+    });
   });
 });
