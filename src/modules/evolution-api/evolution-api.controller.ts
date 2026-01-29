@@ -28,12 +28,6 @@ import { JwtAuthGuard } from "../jwt/jwt-auth.guard";
 export class EvolutionApiController {
   constructor(private readonly service: EvolutionApiService) { }
 
-  @Post("instances")
-  @ApiOperation({ summary: "Create a new Evolution instance" })
-  create(@Body() dto: CreateInstanceDto) {
-    return this.service.createInstance(dto);
-  }
-
   @Get("instances/:name/status")
   @ApiOperation({ summary: "Get instance connection status" })
   @ApiParam({ name: "name", example: "my-instance" })

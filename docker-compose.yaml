@@ -14,6 +14,9 @@ services:
     image: redis:8.4.0-alpine
     container_name: redis
     restart: unless-stopped
+    env_file:
+      - .env 
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
 
@@ -28,6 +31,18 @@ services:
     ports:
       - "8080:8080"
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5672:5672"   
+      - "15672:15672"  
+    volumes:
+      - ./volumes/rabbitmq:/var/lib/rabbitmq
+
   api:
     build:
       context: .
@@ -40,6 +55,7 @@ services:
       - postgres
       - redis
       - evolution-api
+      - rabbitmq
     ports:
       - "3000:3000"
 

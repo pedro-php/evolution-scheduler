@@ -3,13 +3,15 @@ import { InstancesRepository } from "./instances.repository";
 import { EvolutionApiService } from "../evolution-api/evolution-api.service";
 import { JwtPayload } from "../jwt/jwt.payload";
 import { CreateInstanceDto } from "../evolution-api/dto/create-instance.dto";
-import { Prisma } from "@prisma/client";
+import { Instance, Prisma } from "@prisma/client";
+import { RedisService } from "../redis/redis.service";
 
 @Injectable()
 export class InstancesService {
     constructor(
         private readonly instancesRepository: InstancesRepository,
         private readonly evolutionService: EvolutionApiService,
+        private readonly redisService: RedisService,
     ) { }
 
     async create(user: JwtPayload, dto: CreateInstanceDto) {
@@ -42,7 +44,11 @@ export class InstancesService {
     }
 
     async findByName(name: string) {
-        return this.instancesRepository.findByName(name);
+        const redisInstance = await this.redisService.get<Instance>(`instance:${name}`);
+        if (redisInstance) return redisInstance;
+        const instance = await this.instancesRepository.findByName(name);
+        await this.redisService.set<Instance>(`instance:${name}`, instance!);
+        return instance;
     }
 
     findById(id: string) {

@@ -28,7 +28,7 @@ export class EvolutionApiService {
         },
         byEvents: true,
         url: process.env.EVOLUTION_WEBHOOK_URL,
-        events: ["MESSAGES_UPSERT","SEND_MESSAGE"],
+        events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
       },
     };
 
@@ -73,7 +73,6 @@ export class EvolutionApiService {
 
   async fetchInstances() {
     const { data } = await this.evolution.fetchInstances();
-    console.dir({data});
     return data as EvolutionInstance[];
   }
 }
