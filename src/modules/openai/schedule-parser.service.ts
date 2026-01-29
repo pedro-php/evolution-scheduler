@@ -28,7 +28,6 @@ If the user wants to schedule a message, return:
 
 If not schedulable, return null.
 Never explain anything.
-Never type !schedule on the message.
           `.trim(),
         },
         { role: "user", content: text },
