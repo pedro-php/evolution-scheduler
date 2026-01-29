@@ -4,45 +4,57 @@ import { AuthService } from "./auth.service";
 
 describe("AuthController", () => {
   let controller: AuthController;
-
-  const authServiceMock = {
-    register: jest.fn(),
-    login: jest.fn(),
-  };
+  let service: jest.Mocked<AuthService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: AuthService,
+          useValue: {
+            register: jest.fn(),
+            login: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get(AuthController);
+    service = module.get(AuthService);
   });
 
-  it("calls AuthService.register", async () => {
-    authServiceMock.register.mockResolvedValue({ access_token: "token" });
+  it("should register admin", async () => {
+    service.register.mockResolvedValue({
+      access_token: "jwt-token",
+    });
 
     const result = await controller.register({
-      email: "test@test.com",
+      email: "admin@test.com",
       password: "123",
     });
 
-    expect(result.access_token).toBe("token");
-    expect(authServiceMock.register).toHaveBeenCalled();
+    expect(service.register).toHaveBeenCalledWith({
+      email: "admin@test.com",
+      password: "123",
+    });
+    expect(result.access_token).toBe("jwt-token");
   });
 
-  it("calls AuthService.login", async () => {
-    authServiceMock.login.mockResolvedValue({ access_token: "token" });
+  it("should login admin", async () => {
+    service.login.mockResolvedValue({
+      access_token: "jwt-token",
+    });
 
     const result = await controller.login({
-      email: "test@test.com",
+      email: "admin@test.com",
       password: "123",
     });
 
-    expect(result.access_token).toBe("token");
-    expect(authServiceMock.login).toHaveBeenCalled();
+    expect(service.login).toHaveBeenCalledWith({
+      email: "admin@test.com",
+      password: "123",
+    });
+    expect(result.access_token).toBe("jwt-token");
   });
 });
-

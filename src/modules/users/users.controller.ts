@@ -8,6 +8,7 @@ import {
   UseGuards,
   NotFoundException,
   Delete,
+  Param,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -53,12 +54,12 @@ export class UsersController {
 
   @Patch(":id")
   @ApiOkResponse({ type: UserResponseDto })
-  async update(@Query("id") id: string,@Body() dto: PatchUserDto): Promise<UserResponseDto | null> {
+  async update(@Param("id") id: string,@Body() dto: PatchUserDto): Promise<UserResponseDto | null> {
     return this.usersService.update(id, dto);
   }
 
   @Delete(":id")
-  async delete(@Query("id") id: string): Promise<void> {
+  async delete(@Param("id") id: string): Promise<void> {
     return this.usersService.delete(id);
   }
 }
