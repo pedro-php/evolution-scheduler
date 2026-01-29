@@ -47,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ppmatxt/agenda-api:0.0.1
     container_name: api
     restart: always
     env_file:
