@@ -115,18 +115,6 @@ requirementDiagram
     }
 ```
 
-# C4 Diagram (Context)
-```mermaid
-C4Context
-    title System Context Diagram
-    Person(user, "User", "A user of the system")
-    System(system, "My App", "Does things")
-    System_Ext(ext, "External API", "Provides data")
-
-    user -> system : Uses
-    system -> ext : Calls
-```
-
 # Mindmap
 ```mermaid
 mindmap
